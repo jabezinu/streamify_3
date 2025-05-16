@@ -1,6 +1,7 @@
 import validator from "validator";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken"
+import { upsertStreamUser } from "../lib/stream.js";
 
 export async function signup(req, res)  {
     const {email, password, fullName} = req.body;
@@ -33,7 +34,17 @@ export async function signup(req, res)  {
             profilePic: randomAvator,
         })
 
-        // TODO: CREATE THE USER IN STREAM AS WELL
+        try {
+            await upsertStreamUser({
+                id: newUser._id.toString(),
+                name: newUser.fullName,
+                image: newUser.profilePic || "",                
+            })
+            console.log(`Stream user created for ${newUser.fullName}`);
+        } catch (error) {
+            console.log("Error creating Stream user: ", error);
+            
+        }
 
         const token = jwt.sign(
             {userId: newUser._id}, 
@@ -41,7 +52,7 @@ export async function signup(req, res)  {
             {expiresIn: "7d"}
         )
 
-        res.cookie("token", token, {
+        res.cookie("jwt", token, {
             maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true, //prevent XSS attacks,
             sameSite: "strict", // prevent CSRF attacks
@@ -67,18 +78,20 @@ export async function login(req, res) {
             return res.status(401).json({message: "Invalid email or password"})
         }
         
+        
         const isPasswordCorrect = await user.matchPassword(password)
-        if(isPasswordCorrect) {
-            return res.status(401).json({message: "Invalid email or password"})
+        if(!isPasswordCorrect) {
+            return res.status(401).json({message: "Invalid password"})
         }
-
+        
         const token = jwt.sign(
-            {userId: newUser._id}, 
+            {userId: user._id}, 
             process.env.JWT_SECRET_KEY, 
             {expiresIn: "7d"}
         )
 
-        res.cookie("token", token, {
+        // console.log("heloo");
+        res.cookie("jwt", token, {
             maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true, //prevent XSS attacks,
             sameSite: "strict", // prevent CSRF attacks
@@ -93,6 +106,7 @@ export async function login(req, res) {
     
 }
 export function logout(req, res) {
-    res.send("logout Route.")
+    res.clearCookie("jwt");
+    res.status(200).json({success: true, message: "Logout successfuly"})
 }
 
