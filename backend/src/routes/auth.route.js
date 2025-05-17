@@ -11,4 +11,9 @@ authRoutes.post("/logout", logout)
 
 authRoutes.post("/onboarding", protectRoute, onboard)
 
+// check if user is logedin
+authRoutes.get("/me", protectRoute,(req, res) => {
+    res.status(200).json({success: true, user: req.user})
+})
+
 export default authRoutes
