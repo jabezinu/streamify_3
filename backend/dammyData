@@ -5,3 +5,10 @@
     "learningLanguage": "Spanish",
     "location": "New York, USA"
 }
+
+signup 
+{
+    "fullName": "Jabez Shiferaw",
+    "email": "jabez@gmail.com",
+    "password": 123456   
+}
