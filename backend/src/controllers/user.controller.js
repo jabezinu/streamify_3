@@ -1,3 +1,4 @@
+import FriendRequest from "../models/FriendRequest.js";
 import User from "../models/User.js";
 
 export async function getRecommendedUserss (req, res) {
@@ -29,7 +30,54 @@ export async function getMyFriends (req, res) {
         res.status(200).json(user.friends)
     } catch (error) {
         console.error("Error on getMyFriends action: ", error.message);
-        res.status(500).json({message: Internal Server error})
+        res.status(500).json({message: "Internal Server error"})
     }
 }
 
+export async function sendFriendRequest (req, res) {
+    try {
+        const myId = req.user.id;
+        const {id:recipientId} = req.params;
+
+        //prevent sending req to yourself
+        if(myId == recipientId) {
+            return res.status(400).json({message: "You can't send friend request to yourself!"})
+        }
+        
+        // if user dont exist
+        const recipient = await User.findById(recipientId)
+        if(!recipient){
+            return res.status(404).json({message: "Recipient not found"});
+        }
+        
+        // check if user is alread friend
+        if(recipient.friends.includes(myId)){
+            return res.status(404).json({message: "Recipient is friend"});
+        }
+
+        // check if a req already exists
+        const existingRequest = await FriendRequest.findOne({
+            $or: [
+                { sender: myId, recipient: recipientId},
+                { sender: recipient, recipient: myId},
+            ],
+        })
+        if(existingRequest){
+            return res
+            .status(400)
+            .json({message: "A friend request already exists between you and this user"})
+
+        }
+
+        const friendRequest = await FriendRequest.create({
+            sender: myId,
+            recipient: recipientId,
+        });
+
+        res.status(201).json(friendRequest)
+    } catch (error) {
+        console.error("Error on getMyFriends action: ", error.message);
+        res.status(500).json({message: "Internal Server error"})
+        
+    }
+}

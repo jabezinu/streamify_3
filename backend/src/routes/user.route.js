@@ -11,4 +11,6 @@ userRoutes.use(protectRoute);
 userRoutes.get("/", getRecommendedUserss)
 userRoutes.get("/friends", getMyFriends)
 
+userRoutes.post("/friend-reques/:id", );
+
 export default userRoutes
