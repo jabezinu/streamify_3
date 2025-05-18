@@ -81,3 +81,32 @@ export async function sendFriendRequest (req, res) {
         
     }
 }
+
+export async function acceptFriendRequest (req, res) {
+    try {
+        const {id:requestId} = req.params;
+
+        // Verify the current user is the recipient
+        const friendRequest = await FriendRequest.findById(requestId);
+        if(friendRequest.recipient.toString() !== req.user.id ){
+            return res.status(403).json({message: "You are not authorized to accept this request"})
+        }
+
+        friendRequest.status = "accepted";
+        await friendRequest.save();
+
+        // add each user to the other's friends array
+        await User.findByIdAndUpdate(friendRequest.sender, {
+            $addToSet: {friends: friendRequest.recipient },
+        });
+        await User.findByIdAndUpdate(friendRequest.recipient, {
+            $addToSet: {friends: friendRequest.recipient },
+        });
+
+        res.status(200).json({message: "Friend request accepted."})
+    } catch (error) {
+        console.error("Error on getMyFriends action: ", error.message);
+        res.status(500).json({message: "Internal Server error"})
+        
+    }
+}
