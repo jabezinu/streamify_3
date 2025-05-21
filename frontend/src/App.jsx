@@ -7,8 +7,19 @@ import ChatPage from "./pages/ChatPage.jsx";
 import CallPage from "./pages/CallPage.jsx";
 import OnBoarding from "./pages/OnBoarding.jsx";
 import { Toaster } from "react-hot-toast"
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios"
 
 export default function App() {
+  const {data, isLoading, error} =  useQuery({ 
+    queryKey: ["todos"],
+
+    queryFn: async() =>{
+      const res = await axios.get("https://jsonplaceholder.typicode.com/todos")
+      return res.data;
+    },
+  });
+
   return (
     <div className="h-screen" data-theme="night">
       <Routes>
