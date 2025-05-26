@@ -3,7 +3,7 @@ import React from 'react'
 const CallPage = () => {
   return (
     <div>
-        call
+        <h1>Call Page</h1>
     </div>
   )
 }
